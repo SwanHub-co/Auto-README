@@ -2,7 +2,6 @@ import gradio as gr
 
 from auto_readme import AutoREADME_Client
 
-
 css = ".json {height: 527px; overflow: scroll;} .json-holder {height: 527px; overflow: scroll;}"
 with gr.Blocks(css=css) as demo:
     state = gr.State(value={"client": AutoREADME_Client()})
@@ -25,38 +24,46 @@ with gr.Blocks(css=css) as demo:
 
     with gr.Row().style():
         with gr.Column(scale=0.6):
-            chatbot = gr.Chatbot([], elem_id="chatbot").style(height=500)
-            with gr.Column(scale=0.85):
-                chat_txt = gr.Textbox(
-                    show_label=False,
-                    placeholder="Enter text and press enter. The url must contain the media type. e.g, https://example.com/example.jpg",
-                    lines=1,
-                ).style(container=False)
-            with gr.Column(scale=0.15, min_width=0):
-                chat_btn = gr.Button("Send").style(full_height=True)
+            with gr.Row().style():
+                chatbot = gr.Chatbot([], elem_id="chatbot").style(height=500)
+            with gr.Row().style():
+                with gr.Column(scale=0.85):
+                    chat_txt = gr.Textbox(
+                        show_label=False,
+                        placeholder="Enter text and press enter. The url must contain the media type. e.g, https://example.com/example.jpg",
+                        lines=1,
+                    ).style(container=False)
+                with gr.Column(scale=0.15, min_width=0):
+                    chat_btn = gr.Button("Send").style(full_height=True)
+            with gr.Row().style():
+                chat_clear_btn = gr.Button("Clear").style()
         with gr.Column(scale=0.4):
             results = gr.Markdown('# Your`s README')
+
 
     def set_key(state, openai_api_key):
         return state["client"].set_key(openai_api_key)
 
-    def add_text(state, chatbot, txt):
-        return state["client"].add_text(chatbot, txt)
 
-    def bot(state, chatbot):
-        return state["client"].bot(chatbot)
+    def chat_with_gpt(state, chatbot, txt):
+        return state["client"].chat_with_gpt(chatbot, txt)
+
+
+    def clear_dialog(chatbot):
+        chatbot = []
+        return chatbot, ""
 
 
     openai_api_key.submit(set_key, [state, openai_api_key], [openai_api_key])
     key_btn.click(set_key, [state, openai_api_key], [openai_api_key])
 
-    chat_txt.submit()
-    chat_btn.click()
-    results.update()
+    chat_txt.submit(chat_with_gpt, [state, chatbot, chat_txt], [chatbot, chat_txt])
+    chat_btn.click(chat_with_gpt, [state, chatbot, chat_txt], [chatbot, chat_txt])
+    chat_clear_btn.click(clear_dialog, [chatbot], [chatbot, chat_txt])
     gr.Examples(
         examples=[
             "Please generate a README template for me",
-            ],
+        ],
         inputs=chat_txt
     )
 
