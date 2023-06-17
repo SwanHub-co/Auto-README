@@ -25,7 +25,7 @@ class AutoREADME_Client:
     def chat_with_gpt(self, chat_history, message):
         if not self.OPENAI_KEY or not self.OPENAI_KEY.startswith(
                 "sk-"):
-            return chat_history, "Please set your OpenAI API key and Hugging Face token first!!!"
+            return chat_history, "Please set your OpenAI API key and Hugging Face token first!!!", "Your`s Readme"
 
         # chat_history.append((message, "Please set your OpenAI API key and Hugging Face token first!!!"))
 
@@ -47,14 +47,13 @@ class AutoREADME_Client:
         )
         return_message = self._use_chatgpt(messages)
         chat_history.append((message, return_message))
-        return chat_history, ""
+        return chat_history, "", "# I`m here"  # readme
 
     def _use_chatgpt(self, messages):
         # openai.Model.retrieve("gpt-3.5")
         openai.api_key = self.OPENAI_KEY
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo-0613",
             messages=messages
         )
         return response.choices[0].message["content"]
-

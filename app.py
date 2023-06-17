@@ -6,21 +6,18 @@ css = ".json {height: 527px; overflow: scroll;} .json-holder {height: 527px; ove
 with gr.Blocks(css=css) as demo:
     state = gr.State(value={"client": AutoREADME_Client()})
     gr.Markdown("<h1><center>Enjoy Auto README!</center></h1>")
-    gr.Markdown("<p align='center'><img src='./resource/logo.png' height='25' width='95'></p>")
+    gr.Markdown("<img src='/Users/shaohon/PycharmProjects/readmegenerator/resources/logo.png'>")
     gr.Markdown(
         "<p align='center' style='font-size: 20px;'> A Smart README Generate AI Power by <a href='https://chat.openai.com/'>ChatGPT</a>.</p>")
     gr.HTML(
         '''<center>Note: Online OpenAI API may sometimes not be available. The author provides his own OpenAI key for everyone to test! Thanks to the author!</center>''')
     with gr.Row().style():
-        with gr.Column(scale=0.85):
-            openai_api_key = gr.Textbox(
-                show_label=False,
-                placeholder="The author has limited funds, recommon to use your own OpenAI API",
-                lines=1,
-                type="password"
-            ).style(container=False)
-        with gr.Column(scale=0.15, min_width=0):
-            key_btn = gr.Button("Submit").style(full_height=True)
+        openai_api_key = gr.Textbox(
+            show_label=False,
+            placeholder="The author has limited funds, recommon to use your own OpenAI API",
+            lines=1,
+            type="password"
+        ).style(container=False)
 
     with gr.Row().style():
         with gr.Column(scale=0.6):
@@ -30,22 +27,21 @@ with gr.Blocks(css=css) as demo:
                 with gr.Column(scale=0.85):
                     chat_txt = gr.Textbox(
                         show_label=False,
-                        placeholder="Enter text and press enter. The url must contain the media type. e.g, https://example.com/example.jpg",
+                        placeholder="Tell me about your project information",
                         lines=1,
                     ).style(container=False)
                 with gr.Column(scale=0.15, min_width=0):
-                    chat_btn = gr.Button("Send").style(full_height=True)
+                    chat_btn = gr.Button("Submit").style()
             with gr.Row().style():
                 chat_clear_btn = gr.Button("Clear").style()
         with gr.Column(scale=0.4):
-            results = gr.Markdown('# Your`s README')
+            with gr.Row():
+                edit_readme_btn = gr.Button('EDIT README')
+            with gr.Row():
+                readme = gr.Markdown("MarkDown?")
 
-
-    def set_key(state, openai_api_key):
-        return state["client"].set_key(openai_api_key)
-
-
-    def chat_with_gpt(state, chatbot, txt):
+    def chat_with_gpt(key, state, chatbot, txt):
+        state["client"].set_key(key)
         return state["client"].chat_with_gpt(chatbot, txt)
 
 
@@ -54,12 +50,10 @@ with gr.Blocks(css=css) as demo:
         return chatbot, ""
 
 
-    openai_api_key.submit(set_key, [state, openai_api_key], [openai_api_key])
-    key_btn.click(set_key, [state, openai_api_key], [openai_api_key])
-
-    chat_txt.submit(chat_with_gpt, [state, chatbot, chat_txt], [chatbot, chat_txt])
-    chat_btn.click(chat_with_gpt, [state, chatbot, chat_txt], [chatbot, chat_txt])
+    chat_txt.submit(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt], [chatbot, chat_txt, readme])
+    chat_btn.click(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt], [chatbot, chat_txt, readme])
     chat_clear_btn.click(clear_dialog, [chatbot], [chatbot, chat_txt])
+
     gr.Examples(
         examples=[
             "Please generate a README template for me",

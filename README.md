@@ -1,7 +1,5 @@
 
-    # Project logo or icon 
-![Project Logo](./logo.png)
-
+![Project Logo](./resources/logo.png)
 # Introduction 
 This project is an AI model that analyzes photos and provides a classification of the theme. Currently, it can classify photos into the following categories: 'childlike', 'christmas', 'city', 'dragonboat', 'east_building', 'excting_sport', 'food', 'inhome', 'leisure_sport', 'nature', 'night', 'pet', 'portrait', 'shop', 'snow', 'spring', 'transport', 'west_building'
 
