@@ -10,16 +10,18 @@ import tiktoken
 # os.makedirs("public/videos", exist_ok=True)
 
 class AutoREADME_Client:
-    def __init__(self, max_history=20):
+    def __init__(self, max_history=8):
         self.OPENAI_KEY = None
         self.MODEL_NAME = "gpt-3.5-turbo-0613"
         self.MAX_HISTORY = max_history
-        self.system_prompt = "Your task is to modify the content of the README file of his open source project according to the user's needs." \
+        self.WRITE_TAG = "WRITING README..."
+        self.system_prompt = "Your task is to generate or modify the content of the open source project README according to the user's needs, " \
+                             "and use the show_readme function to output the result." \
                              "When you think there is not enough information to write a README, ask the user to get the information they need. " \
                              "Guide users how to write README when necessary." \
                              "Try to modify it according to the existing readme and the information it provides, rather than completely re-upgrade the car for you" \
-                             "Unless specified by the user, try to write the README in English, but communicate with the user according to the user's language." \
-                             "Whenever user want to generate or modify the readme code,You must use the function: 'output_readme'!!\n\n"
+                             "Unless specified by the user, try to show the README in English, but communicate with the user according to the user's language." \
+                             "Never output README in chat, instead of call 'show_readme' function \n\n"
 
     def set_key(self, openai_api_key):
         self.OPENAI_KEY = openai_api_key
@@ -49,21 +51,29 @@ class AutoREADME_Client:
             messages.append(
                 {"role": "user", "content": user}
             )
-            messages.append(
-                {"role": "assistant", "content": assistant}
-            )
+            if assistant is self.WRITE_TAG:
+                messages.append(
+                    {"role": "function", "name": "show_readme", "content": "FINISH SHOW"}
+                )
+            else:
+                messages.append(
+                    {"role": "assistant", "content": assistant}
+                )
         messages.append(
             {"role": "system", "content": self.system_prompt}
         )
         messages.append(
-            {"role": "function", "name": "get_current_readme", "content": f"{readme}"}
+            {"role": "function", "name": "get_README", "content": f"{readme}"}
         )
         messages.append(
             {"role": "user", "content": message}
         )
-        delete_num = 0
-        # while self._num_tokens_from_messages(messages) < 3500:
-
+        # delete_num = 0
+        # while self._num_tokens_from_messages(messages) > 3500:
+        #     if delete_num >= self.MAX_HISTORY:
+        #         pass
+        #     del
+        #     delete_num += 1
 
         return_message, func = self._use_chatgpt(messages)
         chat_history.append((message, return_message))
@@ -71,7 +81,7 @@ class AutoREADME_Client:
             readme = readme
         else:
             # func = json.loads(str(func))
-            if func['name'] == 'output_readme':
+            if func['name'] == 'show_readme':
                 arguments = func['arguments']
                 readme = json.loads(arguments)['readme_str']
             else:
@@ -91,8 +101,8 @@ class AutoREADME_Client:
             messages=messages,
             functions=[
                 {
-                    "name": "output_readme",
-                    "description": "output README to user when user asking for generate a new readme or modify current readme",
+                    "name": "show_readme",
+                    "description": "show README to user when user asking for generate a new readme or modify current readme",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -115,9 +125,9 @@ class AutoREADME_Client:
                 # }
             ],
         )
-        if response.get("function_call"):
+        if response.choices[0].message.get("function_call"):
             func = response.choices[0].message["function_call"]
-            return "WRITING README...", func
+            return self.WRITE_TAG, func
         return response.choices[0].message["content"], None
 
     def _num_tokens_from_messages(self, messages):
