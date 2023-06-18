@@ -13,6 +13,11 @@ with gr.Blocks(css=css) as demo:
     </div>
     """)
 
+    # Select Type of OpenAI API
+    with gr.Row().style():
+        select_model = gr.Radio(["gpt-3.5-turbo-0613", "gpt-4-0613"], value="gpt-3.5-turbo-0613", label="Select Model")
+
+
     # Input OpenAI API Token
     with gr.Row().style():
         openai_api_key = gr.Textbox(
@@ -22,7 +27,7 @@ with gr.Blocks(css=css) as demo:
             type="password"
         ).style(container=False)
 
-    with gr.Row().style():
+    with gr.Row(visible=False) as org_row:
         with gr.Column(scale=4):
             openai_org_key = gr.Textbox(
                 show_label=False,
@@ -32,9 +37,6 @@ with gr.Blocks(css=css) as demo:
             ).style(container=False)
         with gr.Column(scale=1):
             openai_org_btn = gr.Button("set org", variant="secondary")
-
-    with gr.Row().style():
-        select_model = gr.Radio(["gpt-3.5-turbo-0613", "gpt-4-0613"], label="Select Model")
 
     with gr.Row().style():
         # README Textbox and Markdown preview
@@ -102,7 +104,13 @@ with gr.Blocks(css=css) as demo:
         state["history_readme"] = None
         return readme
 
+    def change_model(select_model_option):
+        if select_model_option == "gpt-4-0613":
+            return {org_row: gr.update(visible=True)}
+        else:
+            return {org_row: gr.update(visible=False)}
 
+    select_model.input(change_model, inputs=[select_model], outputs=[org_row])
     openai_org_btn.click(set_org_key, inputs=[state, openai_org_key], outputs=[openai_org_key])
     readme.change(update_readme_markdown, inputs=[readme], outputs=[readme_markdown])
     chat_txt.submit(chat_with_gpt, [openai_api_key, select_model, state, chatbot, chat_txt, readme],
