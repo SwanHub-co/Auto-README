@@ -60,7 +60,7 @@ with gr.Blocks(css=css) as demo:
                 )
 
     def update_readme_markdown(readme_code):
-        return readme_code, readme_code
+        return readme_code
 
 
     def chat_with_gpt(key, state, chatbot, txt, readme):
@@ -83,7 +83,7 @@ with gr.Blocks(css=css) as demo:
         return readme
 
 
-    readme.change(update_readme_markdown, inputs=[readme], outputs=[readme_markdown, readme])
+    readme.change(update_readme_markdown, inputs=[readme], outputs=[readme_markdown])
     chat_txt.submit(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
     chat_btn.click(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
     chat_clear_btn.click(clear_dialog, [chatbot], [chatbot, chat_txt])
