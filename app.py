@@ -24,6 +24,20 @@ with gr.Blocks(css=css) as demo:
         ).style(container=False)
 
     with gr.Row().style():
+        with gr.Column(scale=4):
+            openai_org_key = gr.Textbox(
+                show_label=False,
+                placeholder="optional",
+                lines=1,
+                type="password"
+            ).style(container=False)
+        with gr.Column(scale=1):
+            openai_org_btn = gr.Button("set org", variant="secondary")
+
+    with gr.Row().style():
+        select_model = gr.Radio(["gpt-3.5-turbo-0613", "gpt-4-0613"], label="Select Model")
+
+    with gr.Row().style():
         # README Textbox and Markdown preview
         with gr.Column(scale=2):
             gr.Markdown("## Edit your readme with markdwon format.")
@@ -59,13 +73,20 @@ with gr.Blocks(css=css) as demo:
                     inputs=chat_txt
                 )
 
+
     def update_readme_markdown(readme_code):
         return readme_code
 
 
-    def chat_with_gpt(key, state, chatbot, txt, readme):
+    def set_org_key(state, key):
+        state["client"].set_org_key(key)
+        return key
+
+
+    def chat_with_gpt(key, model, state, chatbot, txt, readme):
         state["history_readme"] = readme
         state["client"].set_key(key)
+        state["client"].set_model(model)
         dialog_history, dialog_txt, new_readme = state["client"].chat_with_gpt(chatbot, txt, readme)
         return dialog_history, dialog_txt, new_readme
 
@@ -83,9 +104,12 @@ with gr.Blocks(css=css) as demo:
         return readme
 
 
+    openai_org_btn.click(set_org_key, inputs=[state, openai_org_key], outputs=[openai_org_key])
     readme.change(update_readme_markdown, inputs=[readme], outputs=[readme_markdown])
-    chat_txt.submit(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
-    chat_btn.click(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
+    chat_txt.submit(chat_with_gpt, [openai_api_key, select_model, state, chatbot, chat_txt, readme],
+                    [chatbot, chat_txt, readme])
+    chat_btn.click(chat_with_gpt, [openai_api_key, select_model, state, chatbot, chat_txt, readme],
+                   [chatbot, chat_txt, readme])
     chat_clear_btn.click(clear_dialog, [chatbot], [chatbot, chat_txt])
     undo_readme_btn.click(undo_readme_change, [state, readme], [readme])
 

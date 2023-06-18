@@ -27,6 +27,10 @@ class AutoREADME_Client:
         self.OPENAI_KEY = openai_api_key
         return openai_api_key
 
+    def set_org_key(self, openai_org_key):
+        openai.organization=openai_org_key
+        return openai_org_key
+
     def set_model(self, model_name):
         assert model_name in ["gpt-3.5-turbo-0613", "gpt-4-0613"], NotImplementedError(
             f"""set_model() is not presently implemented for model {self.MODEL_NAME}.
@@ -83,7 +87,11 @@ class AutoREADME_Client:
             # func = json.loads(str(func))
             if func['name'] == 'show_readme':
                 arguments = func['arguments']
-                readme = json.loads(arguments)['readme_str']
+                try:
+                    readme = json.loads(arguments)['readme_str']
+                except:
+                    print(arguments)
+                    readme = str(arguments)
             else:
                 readme = readme
 
