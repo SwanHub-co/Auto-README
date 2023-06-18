@@ -10,9 +10,10 @@ import tiktoken
 # os.makedirs("public/videos", exist_ok=True)
 
 class AutoREADME_Client:
-    def __init__(self):
+    def __init__(self, max_history=20):
         self.OPENAI_KEY = None
         self.MODEL_NAME = "gpt-3.5-turbo-0613"
+        self.MAX_HISTORY = max_history
         self.system_prompt = "Your task is to modify the content of the README file of his open source project according to the user's needs." \
                              "When you think there is not enough information to write a README, ask the user to get the information they need. " \
                              "Guide users how to write README when necessary." \
@@ -41,12 +42,10 @@ class AutoREADME_Client:
                 "sk-"):
             return chat_history, "Please set your OpenAI API key first!!!", readme
 
-        # chat_history.append((message, "Please set your OpenAI API key and Hugging Face token first!!!"))
-
         messages = [
             {"role": "system", "content": self.system_prompt},
         ]
-        for user, assistant in chat_history:
+        for user, assistant in chat_history[-self.MAX_HISTORY:]:
             messages.append(
                 {"role": "user", "content": user}
             )
@@ -62,13 +61,17 @@ class AutoREADME_Client:
         messages.append(
             {"role": "user", "content": message}
         )
+        delete_num = 0
+        # while self._num_tokens_from_messages(messages) < 3500:
+
+
         return_message, func = self._use_chatgpt(messages)
         chat_history.append((message, return_message))
         if func is None:
             readme = readme
         else:
             # func = json.loads(str(func))
-            if func['name'] == 'ouput_readme':
+            if func['name'] == 'output_readme':
                 arguments = func['arguments']
                 readme = json.loads(arguments)['readme_str']
             else:
@@ -88,8 +91,8 @@ class AutoREADME_Client:
             messages=messages,
             functions=[
                 {
-                    "name": "ouput_readme",
-                    "description": "output the markdown format README to user when user asking for generate or want to modify readme",
+                    "name": "output_readme",
+                    "description": "output README to user when user asking for generate a new readme or modify current readme",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -112,8 +115,7 @@ class AutoREADME_Client:
                 # }
             ],
         )
-        content = response.choices[0].message["content"]
-        if content is None:
+        if response.get("function_call"):
             func = response.choices[0].message["function_call"]
             return "WRITING README...", func
         return response.choices[0].message["content"], None
