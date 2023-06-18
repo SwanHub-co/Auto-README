@@ -5,12 +5,16 @@ from auto_readme import AutoREADME_Client
 css = ".json {height: 527px; overflow: scroll;} .json-holder {height: 527px; overflow: scroll;}"
 with gr.Blocks(css=css) as demo:
     state = gr.State(value={"client": AutoREADME_Client(), "history_readme": None})
-    gr.Markdown("<h1><center>Enjoy Auto README!</center></h1>")
-    gr.Markdown("<img src='./resources/logo.png'>")
-    gr.Markdown(
-        "<p align='center' style='font-size: 20px;'> A Smart README Generate AI Power by <a href='https://chat.openai.com/'>ChatGPT</a>.</p>")
-    gr.HTML(
-        '''<center>Note: Online OpenAI API may sometimes not be available. The author provides his own OpenAI key for everyone to test! Thanks to the author!</center>''')
+    gr.HTML("""
+    <div align="center">
+    <h1><center>Enjoy Auto README!</center></h1>
+    <img src="file/resources/logo.png" width=300>
+    <p align='center' style='font-size: 20px;'> A Smart README Generate AI Power by <a href='https://chat.openai.com/'>ChatGPT</a>.</p>
+    <center>Note: Online OpenAI API may sometimes not be available. The author provides his own OpenAI key for everyone to test! Thanks to the author!</center>
+    </div>
+    """)
+
+    # Input OpenAI API Token
     with gr.Row().style():
         openai_api_key = gr.Textbox(
             show_label=False,
@@ -20,30 +24,29 @@ with gr.Blocks(css=css) as demo:
         ).style(container=False)
 
     with gr.Row().style():
-        with gr.Column(scale=0.7):
+        # README Textbox and Markdown preview
+        with gr.Column(scale=2):
             gr.Markdown("## Edit your readme with markdwon format.")
             with gr.Tab("Markdown Code"):
-                readme = gr.TextArea( interactive=True)
+                readme = gr.TextArea(lines=30, interactive=True)
             with gr.Tab("rendering"):
                 readme_markdown = gr.Markdown()
-        with gr.Column(scale=0.3):
+
+        # Chat Area
+        with gr.Column(scale=1):
             gr.Markdown("## Use GPT to help you modify README")
-            with gr.Row().style():
-                chatbot = gr.Chatbot([], elem_id="chatbot").style(height=500)
-            with gr.Row().style():
-                with gr.Column(scale=0.8):
-                    chat_txt = gr.Textbox(
-                        show_label=False,
-                        placeholder="Tell me about your project information",
-                        lines=1,
-                    ).style(container=False)
-                with gr.Column(scale=0.2):
-                    with gr.Column(scale=0.5):
-                        chat_btn = gr.Button("send").style()
-                    with gr.Column(scale=0.5):
-                        undo_readme_btn = gr.Button("Undo change").style()
-            with gr.Row().style():
-                chat_clear_btn = gr.Button("clear dialog").style()
+            chatbot = gr.Chatbot([], elem_id="chatbot").style(height=500)
+            chat_txt = gr.Textbox(
+                show_label=False,
+                placeholder="Tell me about your project information",
+                lines=1,
+            ).style(container=False)
+            chat_btn = gr.Button("send", variant="primary")
+
+            with gr.Row():
+                undo_readme_btn = gr.Button("Undo change", variant="secondary").style(size="sm")
+                chat_clear_btn = gr.Button("clear dialog", variant="secondary").style(size="sm")
+
             with gr.Row().style():
                 gr.Examples(
                     examples=[
@@ -55,9 +58,6 @@ with gr.Blocks(css=css) as demo:
                     ],
                     inputs=chat_txt
                 )
-            # with gr.Row().style():
-
-
 
     def update_readme_markdown(readme_code):
         return readme_code, readme_code
