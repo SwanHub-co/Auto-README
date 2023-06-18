@@ -7,7 +7,6 @@ with gr.Blocks(css=css) as demo:
     state = gr.State(value={"client": AutoREADME_Client(), "history_readme": None})
     gr.HTML("""
     <div align="center">
-    <h1><center>Enjoy Auto README!</center></h1>
     <img src="file/resources/logo.png" width=300>
     <p align='center' style='font-size: 20px;'> A Smart README Generate AI Power by <a href='https://chat.openai.com/'>ChatGPT</a>.</p>
     <center>Note: Online OpenAI API may sometimes not be available. The author provides his own OpenAI key for everyone to test! Thanks to the author!</center>
