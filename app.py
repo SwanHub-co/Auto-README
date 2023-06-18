@@ -6,7 +6,7 @@ css = ".json {height: 527px; overflow: scroll;} .json-holder {height: 527px; ove
 with gr.Blocks(css=css) as demo:
     state = gr.State(value={"client": AutoREADME_Client()})
     gr.Markdown("<h1><center>Enjoy Auto README!</center></h1>")
-    gr.Markdown("<img src='/Users/shaohon/PycharmProjects/readmegenerator/resources/logo.png'>")
+    gr.Markdown("<img src='./resources/logo.png'>")
     gr.Markdown(
         "<p align='center' style='font-size: 20px;'> A Smart README Generate AI Power by <a href='https://chat.openai.com/'>ChatGPT</a>.</p>")
     gr.HTML(
