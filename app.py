@@ -31,14 +31,17 @@ with gr.Blocks(css=css) as demo:
             with gr.Row().style():
                 chatbot = gr.Chatbot([], elem_id="chatbot").style(height=500)
             with gr.Row().style():
-                with gr.Column(scale=0.7):
+                with gr.Column(scale=0.8):
                     chat_txt = gr.Textbox(
                         show_label=False,
                         placeholder="Tell me about your project information",
                         lines=1,
                     ).style(container=False)
-                with gr.Column(scale=0.3):
-                    chat_btn = gr.Button("send").style()
+                with gr.Column(scale=0.2):
+                    with gr.Column(scale=0.5):
+                        chat_btn = gr.Button("send").style()
+                    with gr.Column(scale=0.5):
+                        undo_readme_btn = gr.Button("Undo change").style()
             with gr.Row().style():
                 chat_clear_btn = gr.Button("clear dialog").style()
             with gr.Row().style():
@@ -53,7 +56,7 @@ with gr.Blocks(css=css) as demo:
                     inputs=chat_txt
                 )
             # with gr.Row().style():
-            #     undo_readme_btn = gr.Button("Undo change").style()
+
 
 
     def update_readme_markdown(readme_code):
@@ -84,6 +87,6 @@ with gr.Blocks(css=css) as demo:
     chat_txt.submit(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
     chat_btn.click(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
     chat_clear_btn.click(clear_dialog, [chatbot], [chatbot, chat_txt])
-    # undo_readme_btn.click(undo_readme_change, [state, readme], [readme])
+    undo_readme_btn.click(undo_readme_change, [state, readme], [readme])
 
 demo.launch()
