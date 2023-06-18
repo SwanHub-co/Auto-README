@@ -50,7 +50,7 @@ with gr.Blocks(css=css) as demo:
             with gr.Row().style():
                 gr.Examples(
                     examples=[
-                        "Please give me an empty readme template",
+                        "Please create an readme template",
                         "Please help me polish the README content",
                         "Please help me translate the README into Russian",
                         "请帮我将README翻译成英文",

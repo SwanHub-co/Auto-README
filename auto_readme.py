@@ -1,6 +1,6 @@
 import json
-import os
 import openai
+import tiktoken
 
 
 # OPENAI_KEY = os.environ.get("OPENAI_KEY")
@@ -12,6 +12,7 @@ import openai
 class AutoREADME_Client:
     def __init__(self):
         self.OPENAI_KEY = None
+        self.MODEL_NAME = "gpt-3.5-turbo-0613"
         self.system_prompt = "Your task is to modify the content of the README file of his open source project according to the user's needs." \
                              "When you think there is not enough information to write a README, ask the user to get the information they need. " \
                              "Guide users how to write README when necessary." \
@@ -23,6 +24,14 @@ class AutoREADME_Client:
         self.OPENAI_KEY = openai_api_key
         return openai_api_key
 
+    def set_model(self, model_name):
+        assert model_name in ["gpt-3.5-turbo-0613", "gpt-4-0613"], NotImplementedError(
+            f"""set_model() is not presently implemented for model {self.MODEL_NAME}.
+                  See https://github.com/openai/openai-python/blob/main/chatml.md for 
+                  information on how messages are converted to tokens.""")
+        self.MODEL_NAME = model_name
+        return model_name
+
     def set_system_prompt(self, system_prompt):
         self.system_prompt = system_prompt
         return system_prompt
@@ -30,7 +39,7 @@ class AutoREADME_Client:
     def chat_with_gpt(self, chat_history, message, readme):
         if not self.OPENAI_KEY or not self.OPENAI_KEY.startswith(
                 "sk-"):
-            return chat_history, "Please set your OpenAI API key and Hugging Face token first!!!", readme
+            return chat_history, "Please set your OpenAI API key first!!!", readme
 
         # chat_history.append((message, "Please set your OpenAI API key and Hugging Face token first!!!"))
 
@@ -75,7 +84,7 @@ class AutoREADME_Client:
         # openai.Model.retrieve("gpt-3.5")
         openai.api_key = self.OPENAI_KEY
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo-0613",
+            model=self.MODEL_NAME,
             messages=messages,
             functions=[
                 {
@@ -108,3 +117,24 @@ class AutoREADME_Client:
             func = response.choices[0].message["function_call"]
             return "WRITING README...", func
         return response.choices[0].message["content"], None
+
+    def _num_tokens_from_messages(self, messages):
+        """Returns the number of tokens used by a list of messages."""
+        try:
+            encoding = tiktoken.encoding_for_model(model_name=self.MODEL_NAME)
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
+        if self.MODEL_NAME == "gpt-3.5-turbo-0613":  # note: future models may deviate from this
+            num_tokens = 0
+            for message in messages:
+                num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+                for key, value in message.items():
+                    num_tokens += len(encoding.encode(value))
+                    if key == "name":  # if there's a name, the role is omitted
+                        num_tokens += -1  # role is always required and always 1 token
+            num_tokens += 2  # every reply is primed with <im_start>assistant
+            return num_tokens
+        else:
+            raise NotImplementedError(
+                f"""num_tokens_from_messages() is not presently implemented for model {self.MODEL_NAME}.
+      See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
