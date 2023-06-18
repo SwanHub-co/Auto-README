@@ -20,45 +20,57 @@ with gr.Blocks(css=css) as demo:
         ).style(container=False)
 
     with gr.Row().style():
-        with gr.Column(scale=0.6):
+        with gr.Column(scale=0.7):
+            gr.Markdown("## Edit your readme with markdwon format.")
+            with gr.Tab("Markdown Code"):
+                readme=gr.TextArea(lines=20,interactive=True)
+            with gr.Tab("rendering"):
+                readme_markdown = gr.Markdown()
+        with gr.Column(scale=0.3):
+            gr.Markdown("## Use GPT to help you modify README")
             with gr.Row().style():
                 chatbot = gr.Chatbot([], elem_id="chatbot").style(height=500)
             with gr.Row().style():
-                with gr.Column(scale=0.85):
+                with gr.Column(scale=0.75):
                     chat_txt = gr.Textbox(
                         show_label=False,
                         placeholder="Tell me about your project information",
                         lines=1,
                     ).style(container=False)
-                with gr.Column(scale=0.15, min_width=0):
+                with gr.Column(scale=0.25, min_width=0):
                     chat_btn = gr.Button("Submit").style()
             with gr.Row().style():
                 chat_clear_btn = gr.Button("Clear").style()
-        with gr.Column(scale=0.4):
-            with gr.Row():
-                edit_readme_btn = gr.Button('EDIT README')
-            with gr.Row():
-                readme = gr.Markdown("MarkDown?")
+            with gr.Row().style():
+                gr.Examples(
+                    examples=[
+                        "Please give me an empty readme template",
+                        "Please help me polish the README content",
+                        "Please help me translate the README into Russian",
+                        "请帮我将README翻译成英文",
+                        "構文エラーの修正を手伝ってください",
+                    ],
+                    inputs=chat_txt
+                )
 
-    def chat_with_gpt(key, state, chatbot, txt):
+
+    def update_readme_markdown(readme_code):
+        return readme_code,readme_code
+
+    def chat_with_gpt(key, state, chatbot, txt, readme):
         state["client"].set_key(key)
-        return state["client"].chat_with_gpt(chatbot, txt)
+        return state["client"].chat_with_gpt(chatbot, txt, readme)
 
 
     def clear_dialog(chatbot):
         chatbot = []
         return chatbot, ""
 
-
-    chat_txt.submit(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt], [chatbot, chat_txt, readme])
-    chat_btn.click(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt], [chatbot, chat_txt, readme])
+    readme.change(update_readme_markdown,inputs=[readme],outputs=[readme_markdown,readme])
+    chat_txt.submit(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
+    chat_btn.click(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
     chat_clear_btn.click(clear_dialog, [chatbot], [chatbot, chat_txt])
 
-    gr.Examples(
-        examples=[
-            "Please generate a README template for me",
-        ],
-        inputs=chat_txt
-    )
+
 
 demo.launch()
