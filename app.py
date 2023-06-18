@@ -4,7 +4,7 @@ from auto_readme import AutoREADME_Client
 
 css = ".json {height: 527px; overflow: scroll;} .json-holder {height: 527px; overflow: scroll;}"
 with gr.Blocks(css=css) as demo:
-    state = gr.State(value={"client": AutoREADME_Client()})
+    state = gr.State(value={"client": AutoREADME_Client(), "history_readme": None})
     gr.Markdown("<h1><center>Enjoy Auto README!</center></h1>")
     gr.Markdown("<img src='./resources/logo.png'>")
     gr.Markdown(
@@ -23,7 +23,7 @@ with gr.Blocks(css=css) as demo:
         with gr.Column(scale=0.7):
             gr.Markdown("## Edit your readme with markdwon format.")
             with gr.Tab("Markdown Code"):
-                readme=gr.TextArea(lines=20,interactive=True)
+                readme = gr.TextArea( interactive=True)
             with gr.Tab("rendering"):
                 readme_markdown = gr.Markdown()
         with gr.Column(scale=0.3):
@@ -31,16 +31,16 @@ with gr.Blocks(css=css) as demo:
             with gr.Row().style():
                 chatbot = gr.Chatbot([], elem_id="chatbot").style(height=500)
             with gr.Row().style():
-                with gr.Column(scale=0.75):
+                with gr.Column(scale=0.7):
                     chat_txt = gr.Textbox(
                         show_label=False,
                         placeholder="Tell me about your project information",
                         lines=1,
                     ).style(container=False)
-                with gr.Column(scale=0.25, min_width=0):
-                    chat_btn = gr.Button("Submit").style()
+                with gr.Column(scale=0.3):
+                    chat_btn = gr.Button("send").style()
             with gr.Row().style():
-                chat_clear_btn = gr.Button("Clear").style()
+                chat_clear_btn = gr.Button("clear dialog").style()
             with gr.Row().style():
                 gr.Examples(
                     examples=[
@@ -52,25 +52,38 @@ with gr.Blocks(css=css) as demo:
                     ],
                     inputs=chat_txt
                 )
+            # with gr.Row().style():
+            #     undo_readme_btn = gr.Button("Undo change").style()
 
 
     def update_readme_markdown(readme_code):
-        return readme_code,readme_code
+        return readme_code, readme_code
+
 
     def chat_with_gpt(key, state, chatbot, txt, readme):
+        state["history_readme"] = readme
         state["client"].set_key(key)
-        return state["client"].chat_with_gpt(chatbot, txt, readme)
+        dialog_history, dialog_txt, new_readme = state["client"].chat_with_gpt(chatbot, txt, readme)
+        return dialog_history, dialog_txt, new_readme
 
 
     def clear_dialog(chatbot):
         chatbot = []
         return chatbot, ""
 
-    readme.change(update_readme_markdown,inputs=[readme],outputs=[readme_markdown,readme])
+
+    def undo_readme_change(state, readme):
+        if state["history_readme"] is None:
+            return readme
+        readme = state["history_readme"]
+        state["history_readme"] = None
+        return readme
+
+
+    readme.change(update_readme_markdown, inputs=[readme], outputs=[readme_markdown, readme])
     chat_txt.submit(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
     chat_btn.click(chat_with_gpt, [openai_api_key, state, chatbot, chat_txt, readme], [chatbot, chat_txt, readme])
     chat_clear_btn.click(clear_dialog, [chatbot], [chatbot, chat_txt])
-
-
+    # undo_readme_btn.click(undo_readme_change, [state, readme], [readme])
 
 demo.launch()

@@ -2,6 +2,7 @@ import json
 import os
 import openai
 
+
 # OPENAI_KEY = os.environ.get("OPENAI_KEY")
 
 # os.makedirs("public/images", exist_ok=True)
@@ -16,7 +17,7 @@ class AutoREADME_Client:
                              "Guide users how to write README when necessary." \
                              "Try to modify it according to the existing readme and the information it provides, rather than completely re-upgrade the car for you" \
                              "Unless specified by the user, try to write the README in English, but communicate with the user according to the user's language." \
-                             "When you want to output the readme, use the function\n\n"
+                             "Whenever user want to generate or modify the readme code,You must use the function: 'output_readme'!!\n\n"
 
     def set_key(self, openai_api_key):
         self.OPENAI_KEY = openai_api_key
@@ -47,9 +48,7 @@ class AutoREADME_Client:
             {"role": "system", "content": self.system_prompt}
         )
         messages.append(
-            {
-                "role": "system", "content":self._readme_prompt(readme)
-            }
+            {"role": "function", "name": "get_current_readme", "content": f"{readme}"}
         )
         messages.append(
             {"role": "user", "content": message}
@@ -60,14 +59,16 @@ class AutoREADME_Client:
             readme = readme
         else:
             # func = json.loads(str(func))
-            arguments =func['arguments']
-            readme=json.loads(arguments)['readme_str']
-            # raise 'stop'
+            if func['name'] == 'ouput_readme':
+                arguments = func['arguments']
+                readme = json.loads(arguments)['readme_str']
+            else:
+                readme = readme
 
         return chat_history, "", readme
 
-    def _readme_prompt(self,readme):
-        prompt=f"The markdown code of the current README is as follows:\n{readme}\n\n"
+    def _readme_prompt(self, readme):
+        prompt = f"The markdown code of the current README is as follows:\n{readme}\n\n"
         return prompt
 
     def _use_chatgpt(self, messages):
@@ -78,8 +79,8 @@ class AutoREADME_Client:
             messages=messages,
             functions=[
                 {
-                    "name": "write_readme",
-                    "description": "Write down the markdown format README file",
+                    "name": "ouput_readme",
+                    "description": "output the markdown format README to user when user asking for generate or want to modify readme",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -90,10 +91,20 @@ class AutoREADME_Client:
                         },
                         "required": ["readme_str"]
                     }
-                }
-            ]
+                },
+                # {
+                #     "name": "get_current_readme",
+                #     "description": "Get the user's current readme and return it as a string",
+                #     "parameters": {
+                #         "type": "object",
+                #         "properties": {
+                #         },
+                #     }
+                # }
+            ],
         )
         content = response.choices[0].message["content"]
         if content is None:
-            return "WRITING README...", response.choices[0].message["function_call"]
+            func = response.choices[0].message["function_call"]
+            return "WRITING README...", func
         return response.choices[0].message["content"], None
