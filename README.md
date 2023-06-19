@@ -6,8 +6,9 @@
 </div>  
 
 
-
 ## Introduce
+
+If you like this project, please give it a star; if you have invented better shortcut keys or function plugins, please feel free to send pull requests.
 
 This project utilizes the computational power and language understanding of GPT-4 to generate conversation-based READMEs for GitHub, GitLab or SwanHub repositories.
 
